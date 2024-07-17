@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\EmailVerification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class VerificationController extends Controller
 {
@@ -18,7 +20,7 @@ class VerificationController extends Controller
         // Validate the request data
         $validator = Validator::make($request->all(), [
             'email' => 'required|string|email|max:255|exists:users',
-            'code' => 'required|integer',
+            'code' => 'required|integer:4',
         ]);
 
         if ($validator->fails()) {

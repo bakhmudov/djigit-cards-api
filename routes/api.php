@@ -1,10 +1,12 @@
 <?php
 
-use App\Http\Controllers\Auth\RegisterController;
-use App\Http\Controllers\Auth\VerificationController;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Auth\ResetPasswordController;
+use App\Http\Controllers\Auth\VerificationController;
+use App\Http\Controllers\PersonalBusinessCardController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,23 +19,25 @@ use App\Http\Controllers\Auth\AuthController;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
-
 Route::post('register', [RegisterController::class, 'register']);
 Route::post('verify-email', [VerificationController::class, 'verify']);
 
-Route::group([
+// Маршруты для восстановления пароля
+Route::post('password/email', [ForgotPasswordController::class, 'sendResetLinkEmail']);
+Route::post('password/reset', [ResetPasswordController::class, 'reset']);
 
-    'middleware' => 'api',
-    'prefix' => 'auth'
-
-], function ($router) {
-
+Route::group(['middleware' => 'api', 'prefix' => 'auth'], function ($router) {
     Route::post('login', [AuthController::class, 'login']);
     Route::post('logout', [AuthController::class, 'logout']);
     Route::post('refresh', [AuthController::class, 'refresh']);
     Route::post('me', [AuthController::class, 'me']);
+});
 
+// Маршруты для визиток
+Route::group(['middleware' => 'jwt.auth'], function () {
+    Route::get('cards', [PersonalBusinessCardController::class, 'index']);
+    Route::get('cards/{id}', [PersonalBusinessCardController::class, 'show']);
+    Route::post('cards', [PersonalBusinessCardController::class, 'store']);
+    Route::put('cards/{id}', [PersonalBusinessCardController::class, 'update']);
+    Route::delete('cards/{id}', [PersonalBusinessCardController::class, 'destroy']);
 });
