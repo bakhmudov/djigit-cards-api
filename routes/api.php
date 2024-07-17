@@ -23,8 +23,8 @@ Route::post('register', [RegisterController::class, 'register']);
 Route::post('verify-email', [VerificationController::class, 'verify']);
 
 // Маршруты для восстановления пароля
-Route::post('password/email', [ForgotPasswordController::class, 'sendResetLinkEmail']);
-Route::post('password/reset', [ResetPasswordController::class, 'reset']);
+Route::post('forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail']);
+Route::post('reset-password', [ResetPasswordController::class, 'reset']);
 
 Route::group(['middleware' => 'api', 'prefix' => 'auth'], function ($router) {
     Route::post('login', [AuthController::class, 'login']);
