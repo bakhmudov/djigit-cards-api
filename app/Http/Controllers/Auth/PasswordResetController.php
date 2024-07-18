@@ -82,18 +82,18 @@ class PasswordResetController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'password' => 'required|string|min:8|confirmed',
-            'password_confirmation' => 'required|string|min:8',
-            'code' => 'required|numeric|digits:4',
+            'confirmPassword' => 'required|string|min:8',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], 400);
         }
 
+        // Find the email associated with the reset code
         $reset = EmailVerification::where('code', $request->code)->first();
 
         if (!$reset) {
-            return response()->json(['error' => 'Invalid code'], 400);
+            return response()->json(['error' => 'Invalid or expired reset code'], 400);
         }
 
         $user = User::where('id', $reset->user_id)->first();
