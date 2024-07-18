@@ -1,9 +1,8 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthController;
-use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegisterController;
-use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\VerificationController;
 use App\Http\Controllers\PersonalBusinessCardController;
 use Illuminate\Support\Facades\Route;
@@ -23,8 +22,9 @@ Route::post('register', [RegisterController::class, 'register']);
 Route::post('verify-email', [VerificationController::class, 'verify']);
 
 // Маршруты для восстановления пароля
-Route::post('forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail']);
-Route::post('reset-password', [ResetPasswordController::class, 'reset']);
+Route::post('password-reset', [PasswordResetController::class, 'sendResetCode']);
+Route::post('password-confirmation', [PasswordResetController::class, 'confirmResetCode']);
+Route::post('password-new', [PasswordResetController::class, 'saveNewPassword']);
 
 Route::group(['middleware' => 'api', 'prefix' => 'auth'], function ($router) {
     Route::post('login', [AuthController::class, 'login']);

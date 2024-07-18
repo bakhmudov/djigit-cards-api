@@ -60,6 +60,6 @@ class RegisterController extends Controller
         Mail::to($user->email)->send(new \App\Mail\VerifyEmail($verificationCode));
 
         // Return response
-        return response()->json(['message' => 'User registered. Please verify your email.'], 201);
+        return response()->json(['status' => 'User registered. Please verify your email.'], 201);
     }
 }
