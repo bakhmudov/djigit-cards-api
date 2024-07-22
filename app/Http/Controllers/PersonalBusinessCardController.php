@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CreateCardRequest;
 use App\Models\PersonalBusinessCard;
+use GuzzleHttp\Promise\Create;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -15,7 +17,7 @@ class PersonalBusinessCardController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function store(Request $request): JsonResponse
+    public function store(CreateCardRequest $request): JsonResponse
     {
         $request->validate([
             'fio' => 'required|string|max:255',
