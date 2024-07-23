@@ -130,4 +130,43 @@ class PersonalBusinessCardController extends Controller
 
         return response()->json(['data' => ['status' => 'Card updated successfully']], 200);
     }
+
+
+    public function show($id): JsonResponse
+    {
+        $card = PersonalBusinessCard::with(['phones', 'emails', 'addresses', 'websites'])->findOrFail($id);
+
+        $response = [
+            'id' => $card->id,
+            'photo' => $card->photo,
+            'fio' => $card->fio,
+            'company_name' => $card->company_name,
+            'job_position' => $card->job_position,
+            'main_info' => $card->main_info,
+            'phones' => [
+                'main' => $card->phones->where('type', 'main')->pluck('number')->first(),
+                'work' => $card->phones->where('type', 'work')->pluck('number')->first(),
+                'home' => $card->phones->where('type', 'home')->pluck('number')->first(),
+                'other' => $card->phones->where('type', 'other')->pluck('number')->toArray(),
+            ],
+            'emails' => [
+                'main' => $card->emails->where('type', 'main')->pluck('number')->first(),
+                'work' => $card->emails->where('type', 'work')->pluck('number')->first(),
+                'home' => $card->emails->where('type', 'home')->pluck('number')->first(),
+                'other' => $card->emails->where('type', 'other')->pluck('number')->toArray(),
+            ],
+            'addresses' => [
+                'main' => $card->addresses->where('type', 'main')->pluck('number')->first(),
+                'work' => $card->addresses->where('type', 'work')->pluck('number')->first(),
+                'home' => $card->addresses->where('type', 'home')->pluck('number')->first(),
+                'other' => $card->addresses->where('type', 'other')->pluck('number')->toArray(),
+            ],
+            'websites' => [
+                'main' => $card->websites->where('type', 'main')->pluck('url')->first(),
+                'other' => $card->websites->where('type', 'other')->pluck('url')->toArray(),
+            ],
+        ];
+
+        return response()->json(['data' => $response], 200);
+    }
 }
