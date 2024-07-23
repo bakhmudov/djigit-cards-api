@@ -14,7 +14,7 @@ class PersonalBusinessCardController extends Controller
     /**
      * Store a new created personal business card.
      *
-     * @param Request $request
+     * @param CreateCardRequest $request
      * @return JsonResponse
      */
     public function store(CreateCardRequest $request): JsonResponse
@@ -36,7 +36,11 @@ class PersonalBusinessCardController extends Controller
     }
 
     /**
+     * Update personal business card.
      *
+     * @param Request $request
+     * @param $id
+     * @return JsonResponse
      */
     public function update(Request $request, $id)
     {

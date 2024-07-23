@@ -11,7 +11,8 @@ class CreateCardRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        // Разрешить всем авторизованным пользователям
+        return auth()->check();
     }
 
     /**
