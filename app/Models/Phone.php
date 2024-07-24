@@ -13,7 +13,7 @@ class Phone extends Model
         'business_card_id', 'type', 'number',
     ];
 
-    public function businessCard()
+    public function businessCard(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(PersonalBusinessCard::class, 'business_card_id');
     }

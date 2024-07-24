@@ -106,10 +106,10 @@ class PersonalBusinessCardController extends Controller
             foreach ($request->addresses as $type => $address) {
                 if (is_array($address)) {
                     foreach ($address as $addr) {
-                        $card->emails()->create(['type' => $type, 'email' => $addr]);
+                        $card->addresses()->create(['type' => $type, 'address' => $addr]);
                     }
                 } else {
-                    $card->addresses()->create(['type' => $type, 'email' => $address]);
+                    $card->addresses()->create(['type' => $type, 'address' => $address]);
                 }
             }
         }
@@ -120,10 +120,10 @@ class PersonalBusinessCardController extends Controller
             foreach ($request->websites as $type => $url) {
                 if (is_array($url)) {
                     foreach ($url as $u) {
-                        $card->emails()->create(['type' => $type, 'email' => $u]);
+                        $card->websites()->create(['type' => $type, 'url' => $u]);
                     }
                 } else {
-                    $card->websites()->create(['type' => $type, 'email' => $url]);
+                    $card->websites()->create(['type' => $type, 'url' => $url]);
                 }
             }
         }
