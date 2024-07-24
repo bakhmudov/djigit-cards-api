@@ -37,5 +37,5 @@ Route::group(['middleware' => 'api', 'prefix' => 'auth'], function ($router) {
 Route::group(['middleware' => 'auth:api'], function () {
     Route::post('/card-creation', [PersonalBusinessCardController::class, 'store']);
     Route::put('/card-edit/{id}', [PersonalBusinessCardController::class, 'update']);
-    Route::get('/card-edit/{id}', [PersonalBusinessCardController::class, 'show']);
+    Route::get('/card/{id}', [PersonalBusinessCardController::class, 'show']);
 });
