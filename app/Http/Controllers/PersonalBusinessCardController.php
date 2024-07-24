@@ -109,7 +109,7 @@ class PersonalBusinessCardController extends Controller
                         $card->emails()->create(['type' => $type, 'email' => $addr]);
                     }
                 } else {
-                    $card->emails()->create(['type' => $type, 'email' => $address]);
+                    $card->addresses()->create(['type' => $type, 'email' => $address]);
                 }
             }
         }
@@ -123,7 +123,7 @@ class PersonalBusinessCardController extends Controller
                         $card->emails()->create(['type' => $type, 'email' => $u]);
                     }
                 } else {
-                    $card->emails()->create(['type' => $type, 'email' => $url]);
+                    $card->websites()->create(['type' => $type, 'email' => $url]);
                 }
             }
         }
