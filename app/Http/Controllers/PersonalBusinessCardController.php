@@ -77,12 +77,20 @@ class PersonalBusinessCardController extends Controller
                 if (is_array($number)) {
                     foreach ($number as $num) {
                         if (!empty($num)) {
-                            $card->phones()->create(['type' => $type, 'number' => $num, 'business_card_id' => $card->id]);
+                            $card->phones()->create([
+                                'type' => $type,
+                                'number' => $num,
+                                'personal_business_card_id' => $card->id
+                            ]);
                         }
                     }
                 } else {
                     if (!empty($number)) {
-                        $card->phones()->create(['type' => $type, 'number' => $number, 'business_card_id' => $card->id]);
+                        $card->phones()->create([
+                            'type' => $type,
+                            'number' => $number,
+                            'personal_business_card_id' => $card->id
+                        ]);
                     }
                 }
             }
@@ -95,12 +103,20 @@ class PersonalBusinessCardController extends Controller
                 if (is_array($email)) {
                     foreach ($email as $em) {
                         if (!empty($em)) {
-                            $card->emails()->create(['type' => $type, 'email' => $em, 'business_card_id' => $card->id]);
+                            $card->emails()->create([
+                                'type' => $type,
+                                'email' => $em,
+                                'personal_business_card_id' => $card->id
+                            ]);
                         }
                     }
                 } else {
                     if (!empty($email)) {
-                        $card->emails()->create(['type' => $type, 'email' => $email, 'business_card_id' => $card->id]);
+                        $card->emails()->create([
+                            'type' => $type,
+                            'email' => $email,
+                            'personal_business_card_id' => $card->id
+                        ]);
                     }
                 }
             }
@@ -113,12 +129,20 @@ class PersonalBusinessCardController extends Controller
                 if (is_array($address)) {
                     foreach ($address as $addr) {
                         if (!empty($addr)) {
-                            $card->addresses()->create(['type' => $type, 'address' => $addr, 'business_card_id' => $card->id]);
+                            $card->addresses()->create([
+                                'type' => $type,
+                                'address' => $addr,
+                                'personal_business_card_id' => $card->id
+                            ]);
                         }
                     }
                 } else {
                     if (!empty($address)) {
-                        $card->addresses()->create(['type' => $type, 'address' => $address, 'business_card_id' => $card->id]);
+                        $card->addresses()->create([
+                            'type' => $type,
+                            'address' => $address,
+                            'personal_business_card_id' => $card->id
+                        ]);
                     }
                 }
             }
@@ -131,12 +155,20 @@ class PersonalBusinessCardController extends Controller
                 if (is_array($url)) {
                     foreach ($url as $u) {
                         if (!empty($u)) {
-                            $card->websites()->create(['type' => $type, 'url' => $u, 'business_card_id' => $card->id]);
+                            $card->websites()->create([
+                                'type' => $type,
+                                'url' => $u,
+                                'personal_business_card_id' => $card->id
+                            ]);
                         }
                     }
                 } else {
                     if (!empty($url)) {
-                        $card->websites()->create(['type' => $type, 'url' => $url, 'business_card_id' => $card->id]);
+                        $card->websites()->create([
+                            'type' => $type,
+                            'url' => $url,
+                            'personal_business_card_id' => $card->id
+                        ]);
                     }
                 }
             }
