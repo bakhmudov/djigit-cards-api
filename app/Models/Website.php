@@ -9,9 +9,7 @@ class Website extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'business_card_id', 'type', 'url',
-    ];
+    protected $fillable = ['business_card_id', 'type', 'url'];
 
     public function businessCard()
     {

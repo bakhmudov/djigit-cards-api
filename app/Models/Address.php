@@ -9,9 +9,7 @@ class Address extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'business_card_id', 'type', 'address',
-    ];
+    protected $fillable = ['business_card_id', 'type', 'address'];
 
     public function businessCard()
     {

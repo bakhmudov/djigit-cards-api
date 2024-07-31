@@ -34,11 +34,11 @@ class PersonalBusinessCard extends Model
 
     public function addresses()
     {
-        return $this->hasMany(Phone::class, 'business_card_id');
+        return $this->hasMany(Address::class, 'business_card_id');
     }
 
     public function websites()
     {
-        return $this->hasMany(Phone::class, 'business_card_id');
+        return $this->hasMany(Website::class, 'business_card_id');
     }
 }

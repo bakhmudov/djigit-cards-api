@@ -9,9 +9,7 @@ class Phone extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'business_card_id', 'type', 'number',
-    ];
+    protected $fillable = ['business_card_id', 'type', 'number'];
 
     public function businessCard(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
