@@ -80,7 +80,7 @@ class PersonalBusinessCardController extends Controller
                             $card->phones()->create([
                                 'type' => $type,
                                 'number' => $num,
-                                'personal_business_card_id' => $card->id
+                                'business_card_id' => $card->id
                             ]);
                         }
                     }
@@ -89,7 +89,7 @@ class PersonalBusinessCardController extends Controller
                         $card->phones()->create([
                             'type' => $type,
                             'number' => $number,
-                            'personal_business_card_id' => $card->id
+                            'business_card_id' => $card->id
                         ]);
                     }
                 }
@@ -106,7 +106,7 @@ class PersonalBusinessCardController extends Controller
                             $card->emails()->create([
                                 'type' => $type,
                                 'email' => $em,
-                                'personal_business_card_id' => $card->id
+                                'business_card_id' => $card->id
                             ]);
                         }
                     }
@@ -115,7 +115,7 @@ class PersonalBusinessCardController extends Controller
                         $card->emails()->create([
                             'type' => $type,
                             'email' => $email,
-                            'personal_business_card_id' => $card->id
+                            'business_card_id' => $card->id
                         ]);
                     }
                 }
@@ -132,7 +132,7 @@ class PersonalBusinessCardController extends Controller
                             $card->addresses()->create([
                                 'type' => $type,
                                 'address' => $addr,
-                                'personal_business_card_id' => $card->id
+                                'business_card_id' => $card->id
                             ]);
                         }
                     }
@@ -141,7 +141,7 @@ class PersonalBusinessCardController extends Controller
                         $card->addresses()->create([
                             'type' => $type,
                             'address' => $address,
-                            'personal_business_card_id' => $card->id
+                            'business_card_id' => $card->id
                         ]);
                     }
                 }
@@ -158,7 +158,7 @@ class PersonalBusinessCardController extends Controller
                             $card->websites()->create([
                                 'type' => $type,
                                 'url' => $u,
-                                'personal_business_card_id' => $card->id
+                                'business_card_id' => $card->id
                             ]);
                         }
                     }
@@ -167,7 +167,7 @@ class PersonalBusinessCardController extends Controller
                         $card->websites()->create([
                             'type' => $type,
                             'url' => $url,
-                            'personal_business_card_id' => $card->id
+                            'business_card_id' => $card->id
                         ]);
                     }
                 }
