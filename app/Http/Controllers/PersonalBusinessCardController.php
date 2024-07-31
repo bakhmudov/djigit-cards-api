@@ -20,7 +20,7 @@ class PersonalBusinessCardController extends Controller
     {
         $data = $request->validate([
             'fio' => 'required|string|max:255',
-            'about_me' => 'nullable|string', // Добавлено новое поле
+            'about_me' => 'nullable|string',
             'company_name' => 'nullable|string|max:255',
             'job_position' => 'nullable|string|max:255',
         ]);
@@ -44,7 +44,7 @@ class PersonalBusinessCardController extends Controller
         $data = $request->validate([
             'photo' => 'nullable|string',
             'fio' => 'required|string|max:255',
-            'about_me' => 'nullable|string', // Добавлено новое поле
+            'about_me' => 'nullable|string',
             'company_name' => 'nullable|string|max:255',
             'job_position' => 'nullable|string|max:255',
             'main_info.phone' => 'nullable|string|max:25',
@@ -70,7 +70,7 @@ class PersonalBusinessCardController extends Controller
         $card = PersonalBusinessCard::findOrFail($id);
         $card->update($data);
 
-        // Обновление телефонов
+// Обновление телефонов
         if ($request->has('phones')) {
             $card->phones()->delete(); // Удаление старых записей
             foreach ($request->phones as $type => $number) {
@@ -96,7 +96,7 @@ class PersonalBusinessCardController extends Controller
             }
         }
 
-        // Обновление email
+// Обновление email
         if ($request->has('emails')) {
             $card->emails()->delete();
             foreach ($request->emails as $type => $email) {
@@ -122,7 +122,7 @@ class PersonalBusinessCardController extends Controller
             }
         }
 
-        // Обновление адресов
+// Обновление адресов
         if ($request->has('addresses')) {
             $card->addresses()->delete();
             foreach ($request->addresses as $type => $address) {
@@ -148,7 +148,7 @@ class PersonalBusinessCardController extends Controller
             }
         }
 
-        // Обновление веб-сайтов
+// Обновление веб-сайтов
         if ($request->has('websites')) {
             $card->websites()->delete();
             foreach ($request->websites as $type => $url) {
@@ -172,9 +172,9 @@ class PersonalBusinessCardController extends Controller
                     }
                 }
             }
-        }
+}
 
-        return response()->json(['data' => ['status' => 'Card updated successfully']], 200);
+        return response()->json(['data' => ['status' => 'Card updated successfully']]);
     }
 
     /**
@@ -183,7 +183,7 @@ class PersonalBusinessCardController extends Controller
      * @param int $id
      * @return JsonResponse
      */
-    public function show($id): JsonResponse
+    public function show(int $id): JsonResponse
     {
         $card = PersonalBusinessCard::with(['phones', 'emails', 'addresses', 'websites'])->findOrFail($id);
 
@@ -191,7 +191,7 @@ class PersonalBusinessCardController extends Controller
             'id' => $card->id,
             'photo' => $card->photo,
             'fio' => $card->fio,
-            'about_me' => $card->about_me, // Добавлено новое поле
+            'about_me' => $card->about_me,
             'company_name' => $card->company_name,
             'job_position' => $card->job_position,
             'main_info' => $card->main_info,
@@ -202,16 +202,16 @@ class PersonalBusinessCardController extends Controller
                 'other' => $card->phones->where('type', 'other')->pluck('number')->toArray(),
             ],
             'emails' => [
-                'main' => $card->emails->where('type', 'main')->pluck('number')->first(),
-                'work' => $card->emails->where('type', 'work')->pluck('number')->first(),
-                'home' => $card->emails->where('type', 'home')->pluck('number')->first(),
-                'other' => $card->emails->where('type', 'other')->pluck('number')->toArray(),
+                'main' => $card->emails->where('type', 'main')->pluck('email')->first(),
+                'work' => $card->emails->where('type', 'work')->pluck('email')->first(),
+                'home' => $card->emails->where('type', 'home')->pluck('email')->first(),
+                'other' => $card->emails->where('type', 'other')->pluck('email')->toArray(),
             ],
             'addresses' => [
-                'main' => $card->addresses->where('type', 'main')->pluck('number')->first(),
-                'work' => $card->addresses->where('type', 'work')->pluck('number')->first(),
-                'home' => $card->addresses->where('type', 'home')->pluck('number')->first(),
-                'other' => $card->addresses->where('type', 'other')->pluck('number')->toArray(),
+                'main' => $card->addresses->where('type', 'main')->pluck('address')->first(),
+                'work' => $card->addresses->where('type', 'work')->pluck('address')->first(),
+                'home' => $card->addresses->where('type', 'home')->pluck('address')->first(),
+                'other' => $card->addresses->where('type', 'other')->pluck('address')->toArray(),
             ],
             'websites' => [
                 'main' => $card->websites->where('type', 'main')->pluck('url')->first(),
@@ -219,6 +219,6 @@ class PersonalBusinessCardController extends Controller
             ],
         ];
 
-        return response()->json(['data' => $response], 200);
+        return response()->json(['data' => $response]);
     }
 }
