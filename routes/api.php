@@ -4,6 +4,8 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\VerificationController;
+use App\Http\Controllers\CompanyBusinessCardController;
+use App\Http\Controllers\EmployeeBusinessCardController;
 use App\Http\Controllers\PersonalBusinessCardController;
 use Illuminate\Support\Facades\Route;
 
@@ -38,4 +40,21 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::post('/card-creation', [PersonalBusinessCardController::class, 'store']);
     Route::put('/card-edit/{id}', [PersonalBusinessCardController::class, 'update']);
     Route::get('/card/{id}', [PersonalBusinessCardController::class, 'show']);
+});
+
+// Маршруты для создания визитки компании
+Route::middleware('auth:api')->group(function () {
+    Route::prefix('company-cards')->group(function () {
+        Route::post('/', [CompanyBusinessCardController::class, 'store']);
+        Route::put('/{id}', [CompanyBusinessCardController::class, 'update']);
+        Route::get('/{id}', [CompanyBusinessCardController::class, 'show']);
+        Route::delete('/{id}', [CompanyBusinessCardController::class, 'destroy']);
+    });
+
+    Route::prefix('employee-cards')->group(function () {
+        Route::post('/', [EmployeeBusinessCardController::class, 'store']);
+        Route::put('/{id}', [EmployeeBusinessCardController::class, 'update']);
+        Route::get('/{id}', [EmployeeBusinessCardController::class, 'show']);
+        Route::delete('/{id}', [EmployeeBusinessCardController::class, 'destroy']);
+    });
 });

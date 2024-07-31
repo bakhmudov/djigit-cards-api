@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CreateCardRequest;
 use App\Models\PersonalBusinessCard;
-use GuzzleHttp\Promise\Create;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,18 +18,16 @@ class PersonalBusinessCardController extends Controller
      */
     public function store(CreateCardRequest $request): JsonResponse
     {
-        $request->validate([
+        $data = $request->validate([
             'fio' => 'required|string|max:255',
+            'about_me' => 'nullable|string', // Добавлено новое поле
             'company_name' => 'nullable|string|max:255',
             'job_position' => 'nullable|string|max:255',
         ]);
 
-        $card = PersonalBusinessCard::create([
-            'user_id' => Auth::id(),
-            'fio' => $request->fio,
-            'company_name' => $request->company_name,
-            'job_position' => $request->job_position,
-        ]);
+        $data['user_id'] = Auth::id();
+
+        $card = PersonalBusinessCard::create($data);
 
         return response()->json(['data' => ['status' => 'Card created successfully']], 201);
     }
@@ -42,11 +39,12 @@ class PersonalBusinessCardController extends Controller
      * @param $id
      * @return JsonResponse
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, $id): JsonResponse
     {
-        $request->validate([
+        $data = $request->validate([
             'photo' => 'nullable|string',
             'fio' => 'required|string|max:255',
+            'about_me' => 'nullable|string', // Добавлено новое поле
             'company_name' => 'nullable|string|max:255',
             'job_position' => 'nullable|string|max:255',
             'main_info.phone' => 'nullable|string|max:25',
@@ -70,7 +68,7 @@ class PersonalBusinessCardController extends Controller
         ]);
 
         $card = PersonalBusinessCard::findOrFail($id);
-        $card->update($request->only('fio', 'company_name', 'job_position', 'photo', 'main_info'));
+        $card->update($data);
 
         // Обновление телефонов
         if ($request->has('phones')) {
@@ -147,7 +145,12 @@ class PersonalBusinessCardController extends Controller
         return response()->json(['data' => ['status' => 'Card updated successfully']], 200);
     }
 
-
+    /**
+     * Show the specified personal business card.
+     *
+     * @param int $id
+     * @return JsonResponse
+     */
     public function show($id): JsonResponse
     {
         $card = PersonalBusinessCard::with(['phones', 'emails', 'addresses', 'websites'])->findOrFail($id);
@@ -156,6 +159,7 @@ class PersonalBusinessCardController extends Controller
             'id' => $card->id,
             'photo' => $card->photo,
             'fio' => $card->fio,
+            'about_me' => $card->about_me, // Добавлено новое поле
             'company_name' => $card->company_name,
             'job_position' => $card->job_position,
             'main_info' => $card->main_info,

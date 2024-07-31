@@ -10,7 +10,7 @@ class PersonalBusinessCard extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'fio', 'company_name', 'job_position', 'photo', 'main_info'
+        'user_id', 'fio', 'about_me', 'company_name', 'job_position', 'photo', 'main_info'
     ];
 
     protected $casts = [

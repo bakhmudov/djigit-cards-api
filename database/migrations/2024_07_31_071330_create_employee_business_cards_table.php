@@ -11,15 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('personal_business_cards', function (Blueprint $table) {
+        Schema::create('employee_business_cards', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('fio');
-            $table->string('about_me')->nullable();
-            $table->string('company_name')->nullable();
-            $table->string('job_position');
+            $table->foreignId('company_business_card_id')->constrained()->onDelete('cascade');
             $table->string('photo')->nullable();
+            $table->string('fio');
+            $table->string('job_position');
             $table->json('main_info')->nullable();
+            $table->json('phones')->nullable();
+            $table->json('emails')->nullable();
+            $table->json('addresses')->nullable();
+            $table->json('websites')->nullable();
             $table->timestamps();
         });
     }
@@ -29,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('personal_business_cards');
+        Schema::dropIfExists('employee_business_cards');
     }
 };
