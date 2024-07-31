@@ -34,7 +34,7 @@ class CompanyBusinessCardController extends Controller
      * @param int $id
      * @return JsonResponse
      */
-    public function update(Request $request, int $id): JsonResponse
+    public function update(Request $request, $id): JsonResponse
     {
         $company = CompanyBusinessCard::findOrFail($id);
 
@@ -68,9 +68,9 @@ class CompanyBusinessCardController extends Controller
             foreach ($data['websites'] as $website) {
                 $company->websites()->create($website);
             }
-}
+        }
 
-        return response()->json(['data' => $company]);
+        return response()->json(['data' => $company], 200);
     }
 
     /**
@@ -79,12 +79,12 @@ class CompanyBusinessCardController extends Controller
      * @param int $id
      * @return JsonResponse
      */
-    public function show(int $id): JsonResponse
+    public function show($id): JsonResponse
     {
 // Получение визитки компании с адресами, веб-сайтами и сотрудниками
         $company = CompanyBusinessCard::with(['addresses', 'websites', 'employees'])->findOrFail($id);
 
-        return response()->json(['data' => $company]);
+        return response()->json(['data' => $company], 200);
     }
 
     /**
@@ -93,11 +93,11 @@ class CompanyBusinessCardController extends Controller
      * @param int $id
      * @return JsonResponse
      */
-    public function destroy(int $id): JsonResponse
+    public function destroy($id): JsonResponse
     {
         $company = CompanyBusinessCard::findOrFail($id);
         $company->delete();
 
-        return response()->json(['data' => 'Company business card deleted successfully']);
+        return response()->json(['data' => 'Company business card deleted successfully'], 200);
     }
 }
