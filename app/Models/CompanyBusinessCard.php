@@ -11,7 +11,7 @@ class CompanyBusinessCard extends Model
 
     protected $fillable = ['logo', 'name', 'description'];
 
-    public function adresses()
+    public function addresses(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(companyAddress::class);
     }
