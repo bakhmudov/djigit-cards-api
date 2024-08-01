@@ -36,8 +36,6 @@ class CompanyBusinessCardController extends Controller
      */
     public function update(Request $request, $id): JsonResponse
     {
-        $company = CompanyBusinessCard::findOrFail($id);
-
 // Валидация всех полей, которые могут быть обновлены
         $data = $request->validate([
             'logo' => 'nullable|string',
@@ -52,6 +50,7 @@ class CompanyBusinessCardController extends Controller
         ]);
 
 // Обновление визитки компании
+        $company = CompanyBusinessCard::findOrFail($id);
         $company->update($data);
 
 // Обновление адресов
