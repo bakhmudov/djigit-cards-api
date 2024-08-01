@@ -13,12 +13,12 @@ class CompanyBusinessCard extends Model
 
     public function addresses(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
-        return $this->hasMany(companyAddress::class);
+        return $this->hasMany(CompanyAddress::class);
     }
 
     public function websites()
     {
-        $this->hasMany(companyWebsite::class);
+        $this->hasMany(CompanyWebsite::class);
     }
 
     public function employees()
