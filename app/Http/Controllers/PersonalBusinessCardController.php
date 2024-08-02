@@ -229,6 +229,45 @@ class PersonalBusinessCardController extends Controller
             ->where('user_id', $user->id)
             ->get();
 
-        return response()->json(['data' => $cards], 200);
+        $response = $cards->map(function ($card) {
+            return [
+                'id' => $card->id,
+                'user_id' => $card->user_id,
+                'fio' => $card->fio,
+                'about_me' => $card->about_me,
+                'company_name' => $card->company_name,
+                'job_position' => $card->job_position,
+                'photo' => $card->photo,
+                'main_info' => $card->main_info,
+                'created_at' => $card->created_at,
+                'updated_at' => $card->updated_at,
+                'phones' => $card->phones->map(function ($phone) {
+                    return [
+                        'type' => $phone->type,
+                        'number' => $phone->number,
+                    ];
+                }),
+                'emails' => $card->emails->map(function ($email) {
+                    return [
+                        'type' => $email->type,
+                        'email' => $email->email,
+                    ];
+                }),
+                'addresses' => $card->addresses->map(function ($address) {
+                    return [
+                        'type' => $address->type,
+                        'address' => $address->address,
+                    ];
+                }),
+                'websites' => $card->websites->map(function ($website) {
+                    return [
+                        'type' => $website->type,
+                        'url' => $website->url,
+                    ];
+                }),
+            ];
+        });
+
+        return response()->json(['data' => $response], 200);
     }
 }
