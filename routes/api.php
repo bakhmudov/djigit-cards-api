@@ -40,6 +40,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::post('/card-creation', [PersonalBusinessCardController::class, 'store']);
     Route::put('/card-edit/{id}', [PersonalBusinessCardController::class, 'update']);
     Route::get('/card/{id}', [PersonalBusinessCardController::class, 'show']);
+    Route::get('/cards', [PersonalBusinessCardController::class, 'index']);
 });
 
 // Маршруты для создания визитки компании

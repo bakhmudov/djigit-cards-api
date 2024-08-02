@@ -221,4 +221,14 @@ class PersonalBusinessCardController extends Controller
 
         return response()->json(['data' => $response]);
     }
+
+    public function index(): JsonResponse
+    {
+        $user = Auth::user();
+        $cards = PersonalBusinessCard::with(['phones', 'emails', 'addresses', 'websites'])
+            ->where('user_id', $user->id)
+            ->get();
+
+        return response()->json(['data' => $cards], 200);
+    }
 }
