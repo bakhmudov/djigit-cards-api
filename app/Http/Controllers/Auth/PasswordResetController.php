@@ -81,15 +81,16 @@ class PasswordResetController extends Controller
     public function saveNewPassword(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
+            'code' => 'required|numeric|digits:4',
             'password' => 'required|string|min:8|confirmed',
-            'confirmPassword' => 'required|string|min:8',
+            'password_confirmation' => 'required|string|min:8',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], 400);
         }
 
-        // Find the email associated with the reset code
+// Find the email associated with the reset code
         $reset = EmailVerification::where('code', $request->code)->first();
 
         if (!$reset) {
@@ -105,4 +106,3 @@ class PasswordResetController extends Controller
         return response()->json(['data' => ['status' => 'Password reset successfully']], 200);
     }
 }
-
