@@ -38,24 +38,25 @@ Route::group(['middleware' => 'api', 'prefix' => 'auth'], function ($router) {
 // Маршруты для создания персональной визитки
 Route::group(['middleware' => 'auth:api'], function () {
     Route::post('/card-creation', [PersonalBusinessCardController::class, 'store']);
-    Route::put('/card-edit/{id}', [PersonalBusinessCardController::class, 'update']);
-    Route::get('/card/{id}', [PersonalBusinessCardController::class, 'show']);
+    Route::post('/card-edit/{id}', [PersonalBusinessCardController::class, 'update']);
     Route::get('/cards', [PersonalBusinessCardController::class, 'index']);
 });
+
+Route::get('/card/{id}', [PersonalBusinessCardController::class, 'show']);
+Route::get('/company-card/{id}', [CompanyBusinessCardController::class, 'show']);
+Route::get('/employee-card/{id}', [EmployeeBusinessCardController::class, 'show']);
 
 // Маршруты для создания визитки компании
 Route::middleware('auth:api')->group(function () {
     Route::prefix('company-cards')->group(function () {
         Route::post('/', [CompanyBusinessCardController::class, 'store']);
         Route::put('/{id}', [CompanyBusinessCardController::class, 'update']);
-        Route::get('/{id}', [CompanyBusinessCardController::class, 'show']);
         Route::delete('/{id}', [CompanyBusinessCardController::class, 'destroy']);
     });
 
     Route::prefix('employee-cards')->group(function () {
         Route::post('/', [EmployeeBusinessCardController::class, 'store']);
         Route::put('/{id}', [EmployeeBusinessCardController::class, 'update']);
-        Route::get('/{id}', [EmployeeBusinessCardController::class, 'show']);
         Route::delete('/{id}', [EmployeeBusinessCardController::class, 'destroy']);
     });
 });

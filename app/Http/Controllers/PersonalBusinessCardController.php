@@ -51,23 +51,31 @@ class PersonalBusinessCardController extends Controller
             'main_info.telegram' => 'nullable|string|max:255',
             'main_info.whatsapp' => 'nullable|string|max:255',
             'main_info.instagram' => 'nullable|string|max:255',
+            'main_info.vk' =>'nullable|string|max:255',
             'phones.main' => 'nullable|string|max:25',
             'phones.work' => 'nullable|string|max:25',
             'phones.home' => 'nullable|string|max:25',
-            'phones.other' => 'nullable|array',
+            'phones.other' => 'nullable|string',
             'emails.main' => 'nullable|string|max:255',
             'emails.work' => 'nullable|string|max:255',
             'emails.home' => 'nullable|string|max:255',
-            'emails.other' => 'nullable|array',
+            'emails.other' => 'nullable|string',
             'addresses.main' => 'nullable|string|max:255',
             'addresses.work' => 'nullable|string|max:255',
             'addresses.home' => 'nullable|string|max:255',
-            'addresses.other' => 'nullable|array',
+            'addresses.other' => 'nullable|string',
             'websites.main' => 'nullable|string|max:255',
-            'websites.other' => 'nullable|array',
+            'websites.other' => 'nullable|string',
         ]);
 
         $card = PersonalBusinessCard::findOrFail($id);
+
+        // Проверка, является ли текущий  пользователь владельцем визитки
+        if ($card->user_id !== Auth::id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+
         $card->update($data);
 
 // Обновление телефонов
