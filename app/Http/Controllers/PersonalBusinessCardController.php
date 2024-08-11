@@ -29,7 +29,7 @@ class PersonalBusinessCardController extends Controller
 
         $card = PersonalBusinessCard::create($data);
 
-        return response()->json(['data' => ['status' => 'Card created successfully']], 201);
+        return response()->json(['data' => ['status' => 'Card created successfully', 'card' => $card]], 201);
     }
 
     /**
@@ -70,7 +70,7 @@ class PersonalBusinessCardController extends Controller
 
         $card = PersonalBusinessCard::findOrFail($id);
 
-        // Проверка, является ли текущий  пользователь владельцем визитки
+        // Проверка, является ли текущий пользователь владельцем визитки
         if ($card->user_id !== Auth::id()) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
