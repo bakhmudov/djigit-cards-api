@@ -71,9 +71,9 @@ class PersonalBusinessCardController extends Controller
         $card = PersonalBusinessCard::findOrFail($id);
 
         // Проверка, является ли текущий пользователь владельцем визитки
-        if ($card->user_id !== Auth::id()) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
+//        if ($card->user_id !== Auth::id()) {
+//            return response()->json(['error' => 'Unauthorized'], 403);
+//        }
 
 
         $card->update($data);
