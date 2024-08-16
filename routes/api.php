@@ -36,7 +36,7 @@ Route::group(['middleware' => 'api', 'prefix' => 'auth'], function ($router) {
 });
 
 // Маршруты для создания персональной визитки
-Route::group(['middleware' => 'auth:api'], function () {
+Route::group(['middleware' => 'jwt'], function () {
     Route::post('card-creation', [PersonalBusinessCardController::class, 'store']);
     Route::put('card-edit/{id}', [PersonalBusinessCardController::class, 'update']);
     Route::get('cards', [PersonalBusinessCardController::class, 'index']);
