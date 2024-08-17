@@ -33,17 +33,33 @@ class PersonalBusinessCardController extends Controller
     }
 
     /**
-     * Update personal business card.
-     *
      * @param Request $request
      * @param $id
      * @return JsonResponse
      */
     public function update(Request $request, $id): JsonResponse
     {
-        // Валидация данных
-        $data = $request->validate([
-            'photo' => 'nullable|file|mimes:jpg,jpeg,png,webp,svg|max:2048',
+        // Определение, как пришли данные (JSON или Form-Data)
+        $contentType = $request->header('Content-Type');
+
+        // Если данные пришли в формате JSON
+        if (strpos($contentType, 'application/json') !== false) {
+            $data = $request->json()->all();
+        } else {
+            // Если данные пришли в формате Form-Data
+            $data = $request->all();
+
+            // Проверка и сохранение файла изображения
+            if ($request->hasFile('photo')) {
+                $file = $request->file('photo');
+                $path = $file->store('photos', 'public'); // Сохранение файла в storage/app/public/photos
+                $data['photo'] = $path; // Обновление пути к файлу в данных
+            }
+        }
+
+        // Валидация данных (применяется в зависимости от формата данных)
+        $validatedData = Validator::make($data, [
+            'photo' => 'nullable|file|mimes:jpg,jpeg,png,webp,svg',
             'fio' => 'required|string|max:255',
             'about_me' => 'nullable|string',
             'company_name' => 'nullable|string|max:255',
@@ -66,37 +82,26 @@ class PersonalBusinessCardController extends Controller
             'addresses.other' => 'nullable|array',
             'websites.main' => 'nullable|string|max:255',
             'websites.other' => 'nullable|array',
-        ]);
+        ])->validate();
 
         $card = PersonalBusinessCard::findOrFail($id);
+        $card->update($validatedData);
 
-        // Проверка и сохранение файла изображения
-        if ($request->hasFile('photo')) {
-            $file = $request->file('photo');
-            $path = $file->store('photos', 'public'); // Сохранение файла в storage/app/public/photos
-            $data['photo'] = $path; // Обновление пути к файлу в данных
-        }
-
-        // Обновление данных визитки
-        $card->update($data);
-
-        // Обновление телефонов
-        $this->updateRelatedData($card, $request->input('phones'), 'phones', 'number');
-
-        // Обновление email
-        $this->updateRelatedData($card, $request->input('emails'), 'emails', 'email');
-
-        // Обновление адресов
-        $this->updateRelatedData($card, $request->input('addresses'), 'addresses', 'address');
-
-        // Обновление веб-сайтов
-        $this->updateRelatedData($card, $request->input('websites'), 'websites', 'url');
+        // Обновление связанных данных
+        $this->updateRelatedData($card, $data['phones'] ?? null, 'phones', 'number');
+        $this->updateRelatedData($card, $data['emails'] ?? null, 'emails', 'email');
+        $this->updateRelatedData($card, $data['addresses'] ?? null, 'addresses', 'address');
+        $this->updateRelatedData($card, $data['websites'] ?? null, 'websites', 'url');
 
         return response()->json(['data' => ['status' => 'Card updated successfully']]);
     }
 
     /**
-     * Обновление связанных данных (телефоны, email, адреса, веб-сайты).
+     * @param $card
+     * @param $relatedData
+     * @param $relation
+     * @param $field
+     * @return void
      */
     private function updateRelatedData($card, $relatedData, $relation, $field)
     {
@@ -125,6 +130,7 @@ class PersonalBusinessCardController extends Controller
             }
         }
     }
+
 
 
     /**
