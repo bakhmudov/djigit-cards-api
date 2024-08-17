@@ -42,7 +42,7 @@ class PersonalBusinessCardController extends Controller
     public function update(Request $request, $id): JsonResponse
     {
         $data = $request->validate([
-            'photo' => 'nullable|string',
+            'photo' => 'nullable|file|mimes:jpg,jpeg,png,webp,svg',
             'fio' => 'required|string|max:255',
             'about_me' => 'nullable|string',
             'company_name' => 'nullable|string|max:255',
@@ -68,6 +68,14 @@ class PersonalBusinessCardController extends Controller
         ]);
 
         $card = PersonalBusinessCard::findOrFail($id);
+
+        // Проверка и сохранение файла изображения
+        if ($request->hasFile('photo')) {
+            $file = $request->file('photo');
+            $path = $file->store('photos', 'public'); // Сохранение файла в storage/app/public/photos
+            $data['photo'] = $path; // Обновление пути к файлу в данных
+        }
+
         $card->update($data);
 
 // Обновление телефонов
