@@ -41,10 +41,9 @@ class PersonalBusinessCardController extends Controller
      */
     public function update(Request $request, $id): JsonResponse
     {
-        dd($request->all());
-
+        // Валидация данных
         $data = $request->validate([
-            'photo' => 'nullable|file|mimes:jpg,jpeg,png,webp,svg',
+            'photo' => 'nullable|file|mimes:jpg,jpeg,png,webp,svg|max:2048',
             'fio' => 'required|string|max:255',
             'about_me' => 'nullable|string',
             'company_name' => 'nullable|string|max:255',
@@ -78,114 +77,55 @@ class PersonalBusinessCardController extends Controller
             $data['photo'] = $path; // Обновление пути к файлу в данных
         }
 
+        // Обновление данных визитки
         $card->update($data);
 
-// Обновление телефонов
-        if ($request->has('phones')) {
-            $card->phones()->delete(); // Удаление старых записей
-            foreach ($request->phones as $type => $number) {
-                if (is_array($number)) {
-                    foreach ($number as $num) {
-                        if (!empty($num)) {
-                            $card->phones()->create([
-                                'type' => $type,
-                                'number' => $num,
-                                'business_card_id' => $card->id
-                            ]);
-                        }
-                    }
-                } else {
-                    if (!empty($number)) {
-                        $card->phones()->create([
-                            'type' => $type,
-                            'number' => $number,
-                            'business_card_id' => $card->id
-                        ]);
-                    }
-                }
-            }
-        }
+        // Обновление телефонов
+        $this->updateRelatedData($card, $request->input('phones'), 'phones', 'number');
 
-// Обновление email
-        if ($request->has('emails')) {
-            $card->emails()->delete();
-            foreach ($request->emails as $type => $email) {
-                if (is_array($email)) {
-                    foreach ($email as $em) {
-                        if (!empty($em)) {
-                            $card->emails()->create([
-                                'type' => $type,
-                                'email' => $em,
-                                'business_card_id' => $card->id
-                            ]);
-                        }
-                    }
-                } else {
-                    if (!empty($email)) {
-                        $card->emails()->create([
-                            'type' => $type,
-                            'email' => $email,
-                            'business_card_id' => $card->id
-                        ]);
-                    }
-                }
-            }
-        }
+        // Обновление email
+        $this->updateRelatedData($card, $request->input('emails'), 'emails', 'email');
 
-// Обновление адресов
-        if ($request->has('addresses')) {
-            $card->addresses()->delete();
-            foreach ($request->addresses as $type => $address) {
-                if (is_array($address)) {
-                    foreach ($address as $addr) {
-                        if (!empty($addr)) {
-                            $card->addresses()->create([
-                                'type' => $type,
-                                'address' => $addr,
-                                'business_card_id' => $card->id
-                            ]);
-                        }
-                    }
-                } else {
-                    if (!empty($address)) {
-                        $card->addresses()->create([
-                            'type' => $type,
-                            'address' => $address,
-                            'business_card_id' => $card->id
-                        ]);
-                    }
-                }
-            }
-        }
+        // Обновление адресов
+        $this->updateRelatedData($card, $request->input('addresses'), 'addresses', 'address');
 
-// Обновление веб-сайтов
-        if ($request->has('websites')) {
-            $card->websites()->delete();
-            foreach ($request->websites as $type => $url) {
-                if (is_array($url)) {
-                    foreach ($url as $u) {
-                        if (!empty($u)) {
-                            $card->websites()->create([
-                                'type' => $type,
-                                'url' => $u,
-                                'business_card_id' => $card->id
-                            ]);
-                        }
-                    }
-                } else {
-                    if (!empty($url)) {
-                        $card->websites()->create([
-                            'type' => $type,
-                            'url' => $url,
-                            'business_card_id' => $card->id
-                        ]);
-                    }
-                }
-            }
-}
+        // Обновление веб-сайтов
+        $this->updateRelatedData($card, $request->input('websites'), 'websites', 'url');
 
         return response()->json(['data' => ['status' => 'Card updated successfully']]);
     }
+
+    /**
+     * Обновление связанных данных (телефоны, email, адреса, веб-сайты).
+     */
+    private function updateRelatedData($card, $relatedData, $relation, $field)
+    {
+        if ($relatedData) {
+            $card->$relation()->delete(); // Удаление старых записей
+            foreach ($relatedData as $type => $value) {
+                if (is_array($value)) {
+                    foreach ($value as $item) {
+                        if (!empty($item)) {
+                            $card->$relation()->create([
+                                'type' => $type,
+                                $field => $item,
+                                'business_card_id' => $card->id,
+                            ]);
+                        }
+                    }
+                } else {
+                    if (!empty($value)) {
+                        $card->$relation()->create([
+                            'type' => $type,
+                            $field => $value,
+                            'business_card_id' => $card->id,
+                        ]);
+                    }
+                }
+            }
+        }
+    }
+
 
     /**
      * Show the specified personal business card.
