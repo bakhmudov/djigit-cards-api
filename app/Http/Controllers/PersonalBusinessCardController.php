@@ -41,6 +41,8 @@ class PersonalBusinessCardController extends Controller
      */
     public function update(Request $request, $id): JsonResponse
     {
+        dd($request->all());
+
         $data = $request->validate([
             'photo' => 'nullable|file|mimes:jpg,jpeg,png,webp,svg',
             'fio' => 'required|string|max:255',
