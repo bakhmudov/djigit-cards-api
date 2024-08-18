@@ -43,6 +43,8 @@ class PersonalBusinessCardController extends Controller
         // Определение, как пришли данные (JSON или Form-Data)
         $contentType = $request->header('Content-Type');
 
+        $card = PersonalBusinessCard::findOrFail($id);
+
         if (str_contains($contentType, 'application/json')) {
             $data = $request->json()->all();
         } else {
@@ -51,7 +53,10 @@ class PersonalBusinessCardController extends Controller
 
             // Проверка и сохранение файла изображения
             if ($request->hasFile('photo')) {
-                $uploaded_image = $request->file('photo')->store('public/uploads/');
+                $file = $request->file('photo');
+                $filename = $file->hashName(); // Генерация уникального имени файла
+                $path = $file->storeAs('public/uploads', $filename); // Сохранение файла с уникальным именем
+                $data['photo'] = '/storage/uploads/' . $filename; // Обновление пути в данных
             }
         }
 
@@ -82,7 +87,6 @@ class PersonalBusinessCardController extends Controller
             'websites.other' => 'nullable|array',
         ])->validate();
 
-        $card = PersonalBusinessCard::findOrFail($id);
         $card->update($validatedData);
 
         // Обновление связанных данных
@@ -91,7 +95,7 @@ class PersonalBusinessCardController extends Controller
         $this->updateRelatedData($card, $data['addresses'] ?? null, 'addresses', 'address');
         $this->updateRelatedData($card, $data['websites'] ?? null, 'websites', 'url');
 
-        return response()->json(['data' => ['status' => 'Card updated successfully'], ["image" => $uploaded_image]]);
+        return response()->json(['data' => ['status' => 'Card updated successfully'], 'image' => $data['photo'] ?? null]);
     }
 
     /**
