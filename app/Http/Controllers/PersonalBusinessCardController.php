@@ -43,7 +43,6 @@ class PersonalBusinessCardController extends Controller
         // Определение, как пришли данные (JSON или Form-Data)
         $contentType = $request->header('Content-Type');
 
-        // Если данные пришли в формате JSON
         if (strpos($contentType, 'application/json') !== false) {
             $data = $request->json()->all();
         } else {
@@ -52,11 +51,13 @@ class PersonalBusinessCardController extends Controller
 
             // Проверка и сохранение файла изображения
             if ($request->hasFile('photo')) {
-                $request->file('photo')->store('public/uploads/');; // Сохранение файла в storage/app/public/photos
+                $file = $request->file('photo');
+                $path = $file->store('uploads', 'public'); // Сохранение файла в storage/app/public/uploads
+                $data['photo'] = '/storage/' . $path; // Сохранение пути в формате доступном через URL
             }
         }
 
-        // Валидация данных (применяется в зависимости от формата данных)
+        // Валидация данных
         $validatedData = Validator::make($data, [
             'photo' => 'nullable|file|mimes:jpg,jpeg,png,webp,svg',
             'fio' => 'required|string|max:255',
