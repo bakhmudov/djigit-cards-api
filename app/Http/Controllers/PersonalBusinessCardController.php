@@ -43,7 +43,7 @@ class PersonalBusinessCardController extends Controller
         // Определение, как пришли данные (JSON или Form-Data)
         $contentType = $request->header('Content-Type');
 
-        if (strpos($contentType, 'application/json') !== false) {
+        if (str_contains($contentType, 'application/json')) {
             $data = $request->json()->all();
         } else {
             // Если данные пришли в формате Form-Data
@@ -93,7 +93,7 @@ class PersonalBusinessCardController extends Controller
         $this->updateRelatedData($card, $data['addresses'] ?? null, 'addresses', 'address');
         $this->updateRelatedData($card, $data['websites'] ?? null, 'websites', 'url');
 
-        return response()->json(['data' => ['status' => 'Card updated successfully']]);
+        return response()->json(['data' => ['status' => 'Card updated successfully'], 'image' => $data]);
     }
 
     /**
