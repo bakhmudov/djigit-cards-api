@@ -51,9 +51,7 @@ class PersonalBusinessCardController extends Controller
 
             // Проверка и сохранение файла изображения
             if ($request->hasFile('photo')) {
-                $file = $request->file('photo');
-                $path = $file->store('uploads', 'public'); // Сохранение файла в storage/app/public/uploads
-                $data['photo'] = '/storage/' . $path; // Сохранение пути в формате доступном через URL
+                $uploaded_image = $request->file('photo')->store('public/uploads/');
             }
         }
 
@@ -93,7 +91,7 @@ class PersonalBusinessCardController extends Controller
         $this->updateRelatedData($card, $data['addresses'] ?? null, 'addresses', 'address');
         $this->updateRelatedData($card, $data['websites'] ?? null, 'websites', 'url');
 
-        return response()->json(['data' => ['status' => 'Card updated successfully'], 'image' => $data]);
+        return response()->json(['data' => ['status' => 'Card updated successfully'], ["image" => $uploaded_image]]);
     }
 
     /**
