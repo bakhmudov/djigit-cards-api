@@ -61,7 +61,6 @@ class PersonalBusinessCardController extends Controller
             // Проверка и сохранение файла изображения
             if ($request->hasFile('photo')) {
                 $uploaded_image = $request->file('photo')->store('public/uploads/');
-                $data['photo'] = '/storage/uploads/' . basename($uploaded_image); // Обновление данных с путем к фото
             }
         }
 
@@ -91,6 +90,11 @@ class PersonalBusinessCardController extends Controller
             'websites.main' => 'nullable|string|max:255',
             'websites.other' => 'nullable|array',
         ])->validate();
+
+        // Сохранение пути к изображению в модели, если изображение загружено
+        if ($uploaded_image) {
+            $validatedData['photo'] = '/storage/uploads/' . basename($uploaded_image);
+        }
 
         // Обновление данных визитки
         $card->update($validatedData);
