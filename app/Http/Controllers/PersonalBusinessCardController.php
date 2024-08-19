@@ -40,10 +40,17 @@ class PersonalBusinessCardController extends Controller
      */
     public function update(Request $request, $id): JsonResponse
     {
+        // Поиск визитки по ID
+        $card = PersonalBusinessCard::findOrFail($id);
+
+        // Проверка, является ли текущий пользователь владельцем визитки
+        if ($card->user_id !== Auth::id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         // Определение, как пришли данные (JSON или Form-Data)
         $contentType = $request->header('Content-Type');
-
-        $card = PersonalBusinessCard::findOrFail($id);
+        $uploaded_image = null;
 
         if (str_contains($contentType, 'application/json')) {
             $data = $request->json()->all();
@@ -53,10 +60,8 @@ class PersonalBusinessCardController extends Controller
 
             // Проверка и сохранение файла изображения
             if ($request->hasFile('photo')) {
-                $file = $request->file('photo');
-                $filename = $file->hashName(); // Генерация уникального имени файла
-                $path = $file->storeAs('public/uploads', $filename); // Сохранение файла с уникальным именем
-                $data['photo'] = '/storage/uploads/' . $filename; // Обновление пути в данных
+                $uploaded_image = $request->file('photo')->store('public/uploads/');
+                $data['photo'] = '/storage/uploads/' . basename($uploaded_image); // Обновление данных с путем к фото
             }
         }
 
@@ -87,6 +92,7 @@ class PersonalBusinessCardController extends Controller
             'websites.other' => 'nullable|array',
         ])->validate();
 
+        // Обновление данных визитки
         $card->update($validatedData);
 
         // Обновление связанных данных
@@ -97,6 +103,28 @@ class PersonalBusinessCardController extends Controller
 
         return response()->json(['data' => ['status' => 'Card updated successfully'], 'image' => $data['photo'] ?? null]);
     }
+
+    public function destroy(int $id): JsonResponse
+    {
+        $card = PersonalBusinessCard::findOrFail($id);
+
+        // Проверка, является ли текущий пользователь владельцем визитки
+        if ($card->user_id !== Auth::id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        // Удаление связанных данных
+        $card->phones()->delete();
+        $card->emails()->delete();
+        $card->addresses()->delete();
+        $card->websites()->delete();
+
+        // Удаление самой визитки
+        $card->delete();
+
+        return response()->json(['data' => ['status' => 'Card deleted successfully']], 200);
+    }
+
 
     /**
      * @param $card

@@ -39,23 +39,26 @@ Route::group(['middleware' => 'api', 'prefix' => 'auth'], function ($router) {
 Route::group(['middleware' => 'auth:api'], function () {
     Route::post('/card-creation', [PersonalBusinessCardController::class, 'store']);
     Route::put('/card-edit/{id}', [PersonalBusinessCardController::class, 'update']);
-    Route::get('/card/{id}', [PersonalBusinessCardController::class, 'show']);
+    Route::delete('/card-delete/{id}', [PersonalBusinessCardController::class, 'destroy']);
     Route::get('/cards', [PersonalBusinessCardController::class, 'index']);
 });
 
-// Маршруты для создания визитки компании
-Route::middleware('auth:api')->group(function () {
-    Route::prefix('company-cards')->group(function () {
-        Route::post('/', [CompanyBusinessCardController::class, 'store']);
-        Route::put('/{id}', [CompanyBusinessCardController::class, 'update']);
-        Route::get('/{id}', [CompanyBusinessCardController::class, 'show']);
-        Route::delete('/{id}', [CompanyBusinessCardController::class, 'destroy']);
-    });
+// Маршруты для просмотра визиток (доступны неавторизованным пользователям)
+Route::get('/card/{id}', [PersonalBusinessCardController::class, 'show']);
 
-    Route::prefix('employee-cards')->group(function () {
-        Route::post('/', [EmployeeBusinessCardController::class, 'store']);
-        Route::put('/{id}', [EmployeeBusinessCardController::class, 'update']);
-        Route::get('/{id}', [EmployeeBusinessCardController::class, 'show']);
-        Route::delete('/{id}', [EmployeeBusinessCardController::class, 'destroy']);
-    });
-});
+// Маршруты для создания визитки компании
+//Route::middleware('auth:api')->group(function () {
+//    Route::prefix('company-cards')->group(function () {
+//        Route::post('/', [CompanyBusinessCardController::class, 'store']);
+//        Route::put('/{id}', [CompanyBusinessCardController::class, 'update']);
+//        Route::get('/{id}', [CompanyBusinessCardController::class, 'show']);
+//        Route::delete('/{id}', [CompanyBusinessCardController::class, 'destroy']);
+//    });
+//
+//    Route::prefix('employee-cards')->group(function () {
+//        Route::post('/', [EmployeeBusinessCardController::class, 'store']);
+//        Route::put('/{id}', [EmployeeBusinessCardController::class, 'update']);
+//        Route::get('/{id}', [EmployeeBusinessCardController::class, 'show']);
+//        Route::delete('/{id}', [EmployeeBusinessCardController::class, 'destroy']);
+//    });
+//});
