@@ -30,7 +30,7 @@ class PersonalBusinessCardController extends Controller
 
         $card = PersonalBusinessCard::create($data);
 
-        return response()->json(['data' => ['status' => 'Card created successfully']], 201);
+        return response()->json(['data' => ['status' => 'Card created successfully', 'card' => $card]], 201);
     }
 
     /**
