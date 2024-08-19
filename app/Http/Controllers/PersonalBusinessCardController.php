@@ -50,7 +50,6 @@ class PersonalBusinessCardController extends Controller
 
         // Определение, как пришли данные (JSON или Form-Data)
         $contentType = $request->header('Content-Type');
-        $uploaded_image = null;
 
         if (str_contains($contentType, 'application/json')) {
             $data = $request->json()->all();
