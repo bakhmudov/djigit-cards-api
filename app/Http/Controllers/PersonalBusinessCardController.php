@@ -50,6 +50,7 @@ class PersonalBusinessCardController extends Controller
 
         // Определение, как пришли данные (JSON или Form-Data)
         $contentType = $request->header('Content-Type');
+        $uploaded_image = null;
 
         if (str_contains($contentType, 'application/json')) {
             $data = $request->json()->all();
@@ -60,6 +61,7 @@ class PersonalBusinessCardController extends Controller
             // Проверка и сохранение файла изображения
             if ($request->hasFile('photo')) {
                 $uploaded_image = $request->file('photo')->store('public/uploads/');
+                $data['photo'] = '/storage/uploads/' . basename($uploaded_image); // Обновление данных с путем к фото
             }
         }
 
@@ -104,7 +106,16 @@ class PersonalBusinessCardController extends Controller
         $this->updateRelatedData($card, $data['addresses'] ?? null, 'addresses', 'address');
         $this->updateRelatedData($card, $data['websites'] ?? null, 'websites', 'url');
 
-        return response()->json(['data' => ['status' => 'Card updated successfully'], 'image' => $data['photo'] ?? null]);
+        // Логирование данных перед отправкой ответа
+        \Log::info('Response data', [
+            'data' => ['status' => 'Card updated successfully'],
+            'image' => $validatedData['photo'] ?? null
+        ]);
+
+        return response()->json([
+            'data' => ['status' => 'Card updated successfully'],
+            'image' => $validatedData['photo'] ?? null // Возвращаем путь к фото в ответе
+        ]);
     }
 
     public function destroy(int $id): JsonResponse
