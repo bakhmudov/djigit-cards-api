@@ -106,15 +106,18 @@ class PersonalBusinessCardController extends Controller
         $this->updateRelatedData($card, $data['addresses'] ?? null, 'addresses', 'address');
         $this->updateRelatedData($card, $data['websites'] ?? null, 'websites', 'url');
 
+        // Очистка данных от потенциально опасных символов
+        $cleanedPhotoPath = $validatedData['photo'] ? str_replace(["\r", "\n"], '', $validatedData['photo']) : null;
+
         // Логирование данных перед отправкой ответа
         \Log::info('Response data', [
             'data' => ['status' => 'Card updated successfully'],
-            'image' => $validatedData['photo'] ?? null
+            'image' => $cleanedPhotoPath
         ]);
 
         return response()->json([
             'data' => ['status' => 'Card updated successfully'],
-            'image' => $validatedData['photo'] ?? null // Возвращаем путь к фото в ответе
+            'image' => $cleanedPhotoPath // Возвращаем путь к фото в ответе
         ]);
     }
 
