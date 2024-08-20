@@ -60,8 +60,7 @@ class PersonalBusinessCardController extends Controller
 
             // Проверка и сохранение файла изображения
             if ($request->hasFile('photo')) {
-                $image_path = $request->file('photo')->store('photos');
-                $data['photo'] = $image_path; // Обновление данных с путем к фото
+                $data['photo'] = $request->file('photo')->store('photos'); // Обновление данных с путем к фото
             }
         }
 
