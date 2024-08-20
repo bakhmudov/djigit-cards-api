@@ -45,12 +45,12 @@ class PersonalBusinessCardController extends Controller
 
         // Проверка, является ли текущий пользователь владельцем визитки
         if ($card->user_id !== Auth::id()) {
-            return response()->json(['error' => 'Unauthorized'], 403);
+            return response()->json(['error' => 'Forbidden'], 403);
         }
 
         // Определение, как пришли данные (JSON или Form-Data)
         $contentType = $request->header('Content-Type');
-        $uploaded_image = null;
+        $image_path = null;
 
         if (str_contains($contentType, 'application/json')) {
             $data = $request->json()->all();
@@ -60,8 +60,8 @@ class PersonalBusinessCardController extends Controller
 
             // Проверка и сохранение файла изображения
             if ($request->hasFile('photo')) {
-                $uploaded_image = $request->file('photo')->store('public/uploads/');
-                $data['photo'] = '/storage/uploads/' . basename($uploaded_image); // Обновление данных с путем к фото
+                $image_path = $request->file('photo')->store('photos');
+                $data['photo'] = $image_path; // Обновление данных с путем к фото
             }
         }
 
@@ -93,8 +93,8 @@ class PersonalBusinessCardController extends Controller
         ])->validate();
 
         // Сохранение пути к изображению в модели, если изображение загружено
-        if ($uploaded_image) {
-            $validatedData['photo'] = '/storage/uploads/' . basename($uploaded_image);
+        if ($image_path) {
+            $validatedData['photo'] = '/storage/uploads/' . basename($image_path);
         }
 
         // Обновление данных визитки
