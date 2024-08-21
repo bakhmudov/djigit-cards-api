@@ -40,82 +40,110 @@ class PersonalBusinessCardController extends Controller
      */
     public function update(Request $request, $id): JsonResponse
     {
+        \Log::info('Update method called', ['user_id' => Auth::id(), 'card_id' => $id]);
+
         // Поиск визитки по ID
         $card = PersonalBusinessCard::findOrFail($id);
+        \Log::info('Card found', ['card_id' => $card->id]);
 
         // Проверка, является ли текущий пользователь владельцем визитки
         if ($card->user_id !== Auth::id()) {
+            \Log::warning('Unauthorized update attempt', ['user_id' => Auth::id(), 'card_id' => $id]);
             return response()->json(['error' => 'Forbidden'], 403);
         }
 
-        // Определение, как пришли данные (JSON или Form-Data)
-        $contentType = $request->header('Content-Type');
+        $data = $request->all();
+        \Log::info('Data received', ['data' => $data]);
+
+        // Проверка и сохранение файла изображения
         $image_path = null;
+        if ($request->hasFile('photo')) {
+            \Log::info('Photo detected in request');
+            try {
+                $image_path = $request->file('photo')->store('public/photos');
+                \Log::info('Photo uploaded successfully', ['image_path' => $image_path]);
 
-        if (str_contains($contentType, 'application/json')) {
-            $data = $request->json()->all();
+                // Преобразуем путь для хранения в базе данных
+                $data['photo'] = str_replace('public/', '/storage/', $image_path);
+            } catch (\Exception $e) {
+                \Log::error('Photo upload failed', ['error' => $e->getMessage()]);
+                return response()->json(['error' => 'Photo upload failed'], 500);
+            }
         } else {
-            // Если данные пришли в формате Form-Data
-            $data = $request->all();
+            \Log::info('No photo uploaded in the request');
+        }
 
-            // Проверка и сохранение файла изображения
-            if ($request->hasFile('photo')) {
-                $image_path = $request->file('photo')->store('photos');
-                $data['photo'] = $image_path; // Обновление данных с путем к фото
+        \Log::info('Starting validation process');
+
+        try {
+            // Валидация данных
+            $validatedData = Validator::make($data, [
+                'photo' => 'nullable|string',
+                'fio' => 'required|string|max:255',
+                'about_me' => 'nullable|string',
+                'company_name' => 'nullable|string|max:255',
+                'job_position' => 'nullable|string|max:255',
+                'main_info.phone' => 'nullable|string|max:25',
+                'main_info.telegram' => 'nullable|string|max:255',
+                'main_info.whatsapp' => 'nullable|string|max:255',
+                'main_info.instagram' => 'nullable|string|max:255',
+                'phones.main' => 'nullable|string|max:25',
+                'phones.work' => 'nullable|string|max:25',
+                'phones.home' => 'nullable|string|max:25',
+                'phones.other' => 'nullable|array',
+                'emails.main' => 'nullable|string|max:255',
+                'emails.work' => 'nullable|string|max:255',
+                'emails.home' => 'nullable|string|max:255',
+                'emails.other' => 'nullable|array',
+                'addresses.main' => 'nullable|string|max:255',
+                'addresses.work' => 'nullable|string|max:255',
+                'addresses.home' => 'nullable|string|max:255',
+                'addresses.other' => 'nullable|array',
+                'websites.main' => 'nullable|string|max:255',
+                'websites.other' => 'nullable|array',
+            ])->validate();
+            \Log::info('Validation passed successfully', ['validated_data' => $validatedData]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Validation failed', ['errors' => $e->errors()]);
+            return response()->json(['error' => 'Validation failed', 'messages' => $e->errors()], 422);
+        }
+
+        // Обновляем только те поля, которые были переданы и прошли валидацию
+        foreach ($validatedData as $key => $value) {
+            if ($value !== null) {
+                $card->{$key} = $value;
             }
         }
 
-        // Валидация данных
-        $validatedData = Validator::make($data, [
-            'photo' => 'nullable|file|mimes:jpg,jpeg,png,webp,svg',
-            'fio' => 'required|string|max:255',
-            'about_me' => 'nullable|string',
-            'company_name' => 'nullable|string|max:255',
-            'job_position' => 'nullable|string|max:255',
-            'main_info.phone' => 'nullable|string|max:25',
-            'main_info.telegram' => 'nullable|string|max:255',
-            'main_info.whatsapp' => 'nullable|string|max:255',
-            'main_info.instagram' => 'nullable|string|max:255',
-            'phones.main' => 'nullable|string|max:25',
-            'phones.work' => 'nullable|string|max:25',
-            'phones.home' => 'nullable|string|max:25',
-            'phones.other' => 'nullable|array',
-            'emails.main' => 'nullable|string|max:255',
-            'emails.work' => 'nullable|string|max:255',
-            'emails.home' => 'nullable|string|max:255',
-            'emails.other' => 'nullable|array',
-            'addresses.main' => 'nullable|string|max:255',
-            'addresses.work' => 'nullable|string|max:255',
-            'addresses.home' => 'nullable|string|max:255',
-            'addresses.other' => 'nullable|array',
-            'websites.main' => 'nullable|string|max:255',
-            'websites.other' => 'nullable|array',
-        ])->validate();
-
-        // Сохранение пути к изображению в модели, если изображение загружено
-        if ($image_path) {
-            $validatedData['photo'] = '/storage/uploads/' . basename($image_path);
+        // Обновление данных визитки
+        try {
+            $card->save();
+            \Log::info('Card updated successfully', ['card_id' => $card->id, 'validated_data' => $validatedData]);
+        } catch (\Exception $e) {
+            \Log::error('Card update failed', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Card update failed'], 500);
         }
 
-        // Обновление данных визитки
-        $card->update($validatedData);
-
         // Обновление связанных данных
-        $this->updateRelatedData($card, $data['phones'] ?? null, 'phones', 'number');
-        $this->updateRelatedData($card, $data['emails'] ?? null, 'emails', 'email');
-        $this->updateRelatedData($card, $data['addresses'] ?? null, 'addresses', 'address');
-        $this->updateRelatedData($card, $data['websites'] ?? null, 'websites', 'url');
-
-        // Очистка данных от потенциально опасных символов
-        $cleanedPhotoPath = $validatedData['photo'] ? str_replace(["\r", "\n"], '', $validatedData['photo']) : null;
+        \Log::info('Updating related data (phones, emails, addresses, websites)');
+        try {
+            $this->updateRelatedData($card, $data['phones'] ?? null, 'phones', 'number');
+            $this->updateRelatedData($card, $data['emails'] ?? null, 'emails', 'email');
+            $this->updateRelatedData($card, $data['addresses'] ?? null, 'addresses', 'address');
+            $this->updateRelatedData($card, $data['websites'] ?? null, 'websites', 'url');
+            \Log::info('Related data updated successfully', ['card_id' => $card->id]);
+        } catch (\Exception $e) {
+            \Log::error('Related data update failed', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Related data update failed'], 500);
+        }
 
         // Логирование данных перед отправкой ответа
-        \Log::info('Response data', [
+        \Log::info('Preparing response data', [
             'data' => ['status' => 'Card updated successfully'],
-            'image' => $cleanedPhotoPath
+            'image' => $validatedData['photo'] ?? null
         ]);
 
-        return response()->json(['data' => ['status' => 'Card updated successfully']], 200);
+        return response()->json(['data' => ['status' => 'Card updated successfully'], 'image' => $validatedData['photo'] ?? null], 200);
     }
 
     public function destroy(int $id): JsonResponse
