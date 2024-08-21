@@ -60,7 +60,8 @@ class PersonalBusinessCardController extends Controller
 
             // Проверка и сохранение файла изображения
             if ($request->hasFile('photo')) {
-                $data['photo'] = $request->file('photo')->store('photos'); // Обновление данных с путем к фото
+                $image_path = $request->file('photo')->store('photos');
+                $data['photo'] = $image_path; // Обновление данных с путем к фото
             }
         }
 
@@ -114,10 +115,7 @@ class PersonalBusinessCardController extends Controller
             'image' => $cleanedPhotoPath
         ]);
 
-        return response()->json([
-            'data' => ['status' => 'Card updated successfully'],
-            'image' => $cleanedPhotoPath // Возвращаем путь к фото в ответе
-        ]);
+        return response()->json(['data' => ['status' => 'Card updated successfully']], 200);
     }
 
     public function destroy(int $id): JsonResponse
