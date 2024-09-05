@@ -13,10 +13,12 @@ return new class extends Migration
     {
         Schema::create('phones', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('business_card_id')->constrained('personal_business_cards')->onDelete('cascade');
+            $table->string('business_card_id', 6);
             $table->string('type');
             $table->string('number');
             $table->timestamps();
+
+            $table->foreign('business_card_id')->references('id')->on('personal_business_cards')->onDelete('cascade');
         });
     }
 

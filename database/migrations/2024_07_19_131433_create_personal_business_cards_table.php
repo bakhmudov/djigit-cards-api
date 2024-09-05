@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('personal_business_cards', function (Blueprint $table) {
-            $table->id();
+            $table->string('id', 6)->primary();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('fio');
             $table->string('about_me')->nullable();

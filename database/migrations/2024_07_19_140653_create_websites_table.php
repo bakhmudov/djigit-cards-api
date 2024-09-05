@@ -13,11 +13,16 @@ return new class extends Migration
     {
         Schema::create('websites', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('business_card_id')->constrained('personal_business_cards')->onDelete('cascade');
-            $table->string('type'); // main, other
-            $table->string('url');
+            $table->string('business_card_id', 6);
+            $table->string('site')->nullable();       // Для поля "сайт"
+            $table->string('instagram')->nullable();  // Для поля "instagram"
+            $table->string('telegram')->nullable();   // Для поля "telegram"
+            $table->string('vk')->nullable();         // Для поля "vk"
             $table->timestamps();
+
+            $table->foreign('business_card_id')->references('id')->on('personal_business_cards')->onDelete('cascade');
         });
+
     }
 
     /**

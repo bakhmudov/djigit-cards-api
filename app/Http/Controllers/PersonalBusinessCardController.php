@@ -55,6 +55,15 @@ class PersonalBusinessCardController extends Controller
         $data = $request->all();
         \Log::info('Data received', ['data' => $data]);
 
+        // Обработка удаления фотографии профиля
+        if ($request->input('remove_photo')) {
+            if ($card->photo) {
+                \Storage::delete(str_replace('/storage/', 'public/', $card->photo));
+                \Log::info('Photo removed successfully', ['card_id' => $card->id]);
+                $card->photo = null;
+            }
+        }
+
         // Проверка и сохранение файла изображения
         $image_path = null;
         if ($request->hasFile('photo')) {
@@ -70,7 +79,7 @@ class PersonalBusinessCardController extends Controller
                 return response()->json(['error' => 'Photo upload failed'], 500);
             }
         } else {
-            \Log::info('No photo uploaded in the request');
+            \Log::info('No new photo uploaded in the request');
         }
 
         \Log::info('Starting validation process');
@@ -87,20 +96,6 @@ class PersonalBusinessCardController extends Controller
                 'main_info.telegram' => 'nullable|string|max:255',
                 'main_info.whatsapp' => 'nullable|string|max:255',
                 'main_info.instagram' => 'nullable|string|max:255',
-                'phones.main' => 'nullable|string|max:25',
-                'phones.work' => 'nullable|string|max:25',
-                'phones.home' => 'nullable|string|max:25',
-                'phones.other' => 'nullable|array',
-                'emails.main' => 'nullable|string|max:255',
-                'emails.work' => 'nullable|string|max:255',
-                'emails.home' => 'nullable|string|max:255',
-                'emails.other' => 'nullable|array',
-                'addresses.main' => 'nullable|string|max:255',
-                'addresses.work' => 'nullable|string|max:255',
-                'addresses.home' => 'nullable|string|max:255',
-                'addresses.other' => 'nullable|array',
-                'websites.main' => 'nullable|string|max:255',
-                'websites.other' => 'nullable|array',
             ])->validate();
             \Log::info('Validation passed successfully', ['validated_data' => $validatedData]);
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -130,7 +125,7 @@ class PersonalBusinessCardController extends Controller
             $this->updateRelatedData($card, $data['phones'] ?? null, 'phones', 'number');
             $this->updateRelatedData($card, $data['emails'] ?? null, 'emails', 'email');
             $this->updateRelatedData($card, $data['addresses'] ?? null, 'addresses', 'address');
-            $this->updateRelatedData($card, $data['websites'] ?? null, 'websites', 'url');
+            $this->updateRelatedSocial($card, $data['websites'] ?? null, 'websites');
             \Log::info('Related data updated successfully', ['card_id' => $card->id]);
         } catch (\Exception $e) {
             \Log::error('Related data update failed', ['error' => $e->getMessage()]);
@@ -146,7 +141,7 @@ class PersonalBusinessCardController extends Controller
         return response()->json(['data' => ['status' => 'Card updated successfully'], 'image' => $validatedData['photo'] ?? null], 200);
     }
 
-    public function destroy(int $id): JsonResponse
+    public function destroy(string $id): JsonResponse
     {
         $card = PersonalBusinessCard::findOrFail($id);
 
@@ -168,6 +163,36 @@ class PersonalBusinessCardController extends Controller
     }
 
 
+    private function updateRelatedSocial($card, $relatedData, $relation)
+    {
+        \Log::info("Updating related data for relation: {$relation}", ['relatedData' => $relatedData]);
+
+        if ($relatedData) {
+            try {
+                // Удаление старых записей
+                $card->$relation()->delete();
+                \Log::info("Old {$relation} records deleted successfully.");
+
+                // Добавление новой записи для каждого типа
+                $card->$relation()->create([
+                    'site' => $relatedData['site'] ?? null,
+                    'instagram' => $relatedData['instagram'] ?? null,
+                    'telegram' => $relatedData['telegram'] ?? null,
+                    'vk' => $relatedData['vk'] ?? null,
+                    'business_card_id' => $card->id,
+                ]);
+
+                \Log::info("Added new {$relation} records", ['relatedData' => $relatedData]);
+            } catch (\Exception $e) {
+                \Log::error("Failed to update related data for relation: {$relation}", ['error' => $e->getMessage()]);
+                throw $e;
+            }
+        } else {
+            \Log::info("No related data provided for relation: {$relation}");
+        }
+    }
+
+
     /**
      * @param $card
      * @param $relatedData
@@ -177,47 +202,52 @@ class PersonalBusinessCardController extends Controller
      */
     private function updateRelatedData($card, $relatedData, $relation, $field)
     {
+        \Log::info("Updating related data for relation: {$relation}", ['relatedData' => $relatedData]);
+
         if ($relatedData) {
-            $card->$relation()->delete(); // Удаление старых записей
-            foreach ($relatedData as $type => $value) {
-                if (is_array($value)) {
-                    foreach ($value as $item) {
-                        if (!empty($item)) {
-                            $card->$relation()->create([
-                                'type' => $type,
-                                $field => $item,
-                                'business_card_id' => $card->id,
-                            ]);
-                        }
-                    }
-                } else {
+            try {
+                // Удаление старых записей
+                $card->$relation()->delete();
+                \Log::info("Old {$relation} records deleted successfully.");
+
+                // Если поле other передано как строка, сохраняем его
+                foreach ($relatedData as $type => $value) {
                     if (!empty($value)) {
+                        // Преобразуем массивы в строки, если нужно
+                        if (is_array($value)) {
+                            $value = implode(', ', $value); // Превращаем массив в строку
+                        }
+
                         $card->$relation()->create([
                             'type' => $type,
                             $field => $value,
                             'business_card_id' => $card->id,
                         ]);
+                        \Log::info("Added new {$relation} record", [$field => $value, 'type' => $type]);
                     }
                 }
+            } catch (\Exception $e) {
+                \Log::error("Failed to update related data for relation: {$relation}", ['error' => $e->getMessage()]);
+                throw $e;
             }
+        } else {
+            \Log::info("No related data provided for relation: {$relation}");
         }
     }
-
-
-
+    
     /**
      * Show the specified personal business card.
      *
      * @param int $id
      * @return JsonResponse
      */
-    public function show(int $id): JsonResponse
+    public function show(string $id): JsonResponse
     {
         $card = PersonalBusinessCard::with(['phones', 'emails', 'addresses', 'websites'])->findOrFail($id);
 
         $response = [
             'id' => $card->id,
-            'photo' => $card->photo,
+            'photo' => $card->photo ? url($card->photo) : null,
             'fio' => $card->fio,
             'about_me' => $card->about_me,
             'company_name' => $card->company_name,
@@ -242,8 +272,10 @@ class PersonalBusinessCardController extends Controller
                 'other' => $card->addresses->where('type', 'other')->pluck('address')->toArray(),
             ],
             'websites' => [
-                'main' => $card->websites->where('type', 'main')->pluck('url')->first(),
-                'other' => $card->websites->where('type', 'other')->pluck('url')->toArray(),
+                'site' => $card->websites->first()->site ?? null,
+                'instagram' => $card->websites->first()->instagram ?? null,
+                'telegram' => $card->websites->first()->telegram ?? null,
+                'vk' => $card->websites->first()->vk ?? null,
             ],
         ];
 
@@ -265,7 +297,7 @@ class PersonalBusinessCardController extends Controller
                 'about_me' => $card->about_me,
                 'company_name' => $card->company_name,
                 'job_position' => $card->job_position,
-                'photo' => $card->photo,
+                'photo' => $card->photo ? url($card->photo) : null,
                 'main_info' => $card->main_info,
                 'created_at' => $card->created_at,
                 'updated_at' => $card->updated_at,
@@ -287,12 +319,12 @@ class PersonalBusinessCardController extends Controller
                         'address' => $address->address,
                     ];
                 }),
-                'websites' => $card->websites->map(function ($website) {
-                    return [
-                        'type' => $website->type,
-                        'url' => $website->url,
-                    ];
-                }),
+                'websites' => [
+                    'site' => $card->websites->first()->site ?? null,
+                    'instagram' => $card->websites->first()->instagram ?? null,
+                    'telegram' => $card->websites->first()->telegram ?? null,
+                    'vk' => $card->websites->first()->vk ?? null,
+                ],
             ];
         });
 

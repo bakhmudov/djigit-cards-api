@@ -14,13 +14,15 @@ use Illuminate\Support\Facades\Route;
 | API Routes
 |--------------------------------------------------------------------------
 |
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "api" middleware group. Make something great!
+| Here is where вы можете зарегистрировать маршруты для вашего приложения.
+| Эти маршруты загружаются RouteServiceProvider и все они будут
+| присвоены группе middleware "api". Постарайтесь сделать их удобными!
 |
 */
 
+// Маршруты для регистрации и авторизации
 Route::post('register', [RegisterController::class, 'register']);
+Route::post('resend-verification-code', [RegisterController::class, 'resendVerificationCode']);
 Route::post('verify-email', [VerificationController::class, 'verify']);
 
 // Маршруты для восстановления пароля
@@ -35,7 +37,7 @@ Route::group(['middleware' => 'api', 'prefix' => 'auth'], function ($router) {
     Route::post('me', [AuthController::class, 'me']);
 });
 
-// Маршруты для создания персональной визитки
+// Маршруты для создания, редактирования и удаления персональных визиток (требуется авторизация)
 Route::group(['middleware' => 'auth:api'], function () {
     Route::post('/card-creation', [PersonalBusinessCardController::class, 'store']);
     Route::post('/card-edit/{id}', [PersonalBusinessCardController::class, 'update']);
@@ -43,7 +45,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::get('/cards', [PersonalBusinessCardController::class, 'index']);
 });
 
-// Маршруты для просмотра визиток (доступны неавторизованным пользователям)
+// Маршруты для просмотра визиток (доступны всем пользователям, в том числе неавторизованным)
 Route::get('/card/{id}', [PersonalBusinessCardController::class, 'show']);
 
 // Маршруты для создания визитки компании
