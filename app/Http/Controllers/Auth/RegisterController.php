@@ -3,117 +3,93 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\EmailVerification;
 use App\Models\User;
+use App\Models\EmailVerification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
+use Carbon\Carbon;
 
 class RegisterController extends Controller
 {
-    /**
-     * Create a new RegisterController instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        $this->middleware('guest');
-    }
-
-    /**
-     * Handle a registration request for the application.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function register(Request $request)
     {
-        try {
-            // Validate the request data
-            $validator = Validator::make($request->all(), [
-                'email' => 'required|string|email|max:255|unique:users',
-                'password' => 'required|string|min:6|confirmed',
-            ]);
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|string|email|max:255',
+            'password' => 'required|string|min:6|confirmed',
+        ]);
 
-            if ($validator->fails()) {
-                return response()->json(['error' => $validator->errors()], 400);
-            }
-
-            // Create the user
-            $user = User::create([
-                'email' => $request->email,
-                'password' => Hash::make($request->password),
-                'is_active' => false,
-            ]);
-
-            // Generate a verification code
-            $verificationCode = rand(1000, 9999);
-
-            // Save or update the verification code
-            EmailVerification::updateOrCreate(
-                ['user_id' => $user->id], // Condition
-                ['code' => $verificationCode] // Update or insert this code
-            );
-
-            // Send verification code via email
-            Mail::to($user->email)->send(new \App\Mail\VerifyEmail($verificationCode));
-
-            // Log the successful registration
-            Log::info('User registered successfully', ['user_id' => $user->id]);
-
-            // Return response
-            return response()->json(['status' => 'User registered. Please verify your email.'], 201);
-
-        } catch (\Exception $e) {
-            Log::error('Error during registration', ['exception' => $e->getMessage()]);
-            return response()->json(['error' => 'Registration failed, please try again.'], 500);
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 400);
         }
+
+        $user = User::where('email', $request->email)->first();
+
+        if ($user) {
+            if ($user->is_active) {
+                return response()->json(['error' => 'User already registered and verified'], 400);
+            } else {
+                // User exists but not verified, resend verification code
+                return $this->resendVerificationCode($user);
+            }
+        }
+
+        // Create new user
+        $user = User::create([
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'is_active' => false,
+        ]);
+
+        return $this->sendVerificationCode($user);
     }
 
-    /**
-     * Resend the email verification code.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function resendVerificationCode(Request $request)
+    protected function sendVerificationCode($user)
     {
-        try {
-            // Validate the request data
-            $request->validate([
-                'email' => 'required|string|email|exists:users,email',
-            ]);
+        $verificationCode = rand(1000, 9999);
 
-            // Find the user
-            $user = User::where('email', $request->email)->first();
+        EmailVerification::updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'code' => $verificationCode,
+                'expires_at' => Carbon::now()->addMinutes(10),
+            ]
+        );
 
-            if ($user->is_active) {
-                return response()->json(['message' => 'User is already verified.'], 400);
-            }
+        Mail::to($user->email)->send(new \App\Mail\VerifyEmail($verificationCode));
 
-            // Generate a new verification code
-            $verificationCode = rand(1000, 9999);
+        return response()->json(['status' => 'Verification code sent. Please check your email.'], 200);
+    }
 
-            // Update or create a new verification code
-            $verification = EmailVerification::updateOrCreate(
-                ['user_id' => $user->id],
-                ['code' => $verificationCode]
-            );
+    protected function resendVerificationCode($user)
+    {
+        // Delete any existing verification code
+        EmailVerification::where('user_id', $user->id)->delete();
 
-            // Resend verification code via email
-            Mail::to($user->email)->send(new \App\Mail\VerifyEmail($verificationCode));
+        return $this->sendVerificationCode($user);
+    }
 
-            // Log the resend action
-            Log::info('Verification code resent successfully', ['user_id' => $user->id]);
+    public function resendVerificationCodeManually(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|string|email|max:255',
+        ]);
 
-            return response()->json(['status' => 'Verification code resent. Please check your email.'], 200);
-
-        } catch (\Exception $e) {
-            Log::error('Error during resending verification code', ['exception' => $e->getMessage()]);
-            return response()->json(['error' => 'Failed to resend verification code, please try again.'], 500);
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 400);
         }
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json(['error' => 'User not found'], 404);
+        }
+
+        if ($user->is_active) {
+            return response()->json(['error' => 'User already verified'], 400);
+        }
+
+        return $this->resendVerificationCode($user);
     }
 }

@@ -15,7 +15,10 @@ class PersonalBusinessCard extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
-        'user_id', 'fio', 'about_me', 'company_name', 'job_position', 'photo', 'main_info'
+        'user_id', 'fio',
+        'about_me', 'company_name',
+        'job_position', 'photo',
+        'main_info'
     ];
 
     protected $casts = [

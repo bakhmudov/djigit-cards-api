@@ -13,10 +13,15 @@ return new class extends Migration
     {
         Schema::create('company_addresses', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_business_card_id')->constrained()->onDelete('cascade');
+            $table->string('company_business_card_id', 5);
             $table->string('type');
             $table->string('address');
             $table->timestamps();
+
+            $table->foreign('company_business_card_id')
+                    ->references('id')
+                    ->on('company_business_cards')
+                    ->onDelete('cascade');
         });
     }
 

@@ -18,7 +18,10 @@ return new class extends Migration
             $table->string('number');
             $table->timestamps();
 
-            $table->foreign('business_card_id')->references('id')->on('personal_business_cards')->onDelete('cascade');
+            $table->foreign('business_card_id')
+                    ->references('id')
+                    ->on('personal_business_cards')
+                    ->onDelete('cascade');
         });
     }
 

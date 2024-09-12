@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('employee_business_cards', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('company_business_card_id')->constrained()->onDelete('cascade');
+            $table->string('id')->primary();
+            $table->string('company_business_card_id', 5);
             $table->string('photo')->nullable();
             $table->string('fio');
             $table->string('job_position');
@@ -23,6 +23,11 @@ return new class extends Migration
             $table->json('addresses')->nullable();
             $table->json('websites')->nullable();
             $table->timestamps();
+
+            $table->foreign('company_business_card_id')
+                    ->references('id')
+                    ->on('company_business_cards')
+                    ->onDelete('cascade');
         });
     }
 

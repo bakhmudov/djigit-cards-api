@@ -22,7 +22,7 @@ use Illuminate\Support\Facades\Route;
 
 // Маршруты для регистрации и авторизации
 Route::post('register', [RegisterController::class, 'register']);
-Route::post('resend-verification-code', [RegisterController::class, 'resendVerificationCode']);
+Route::post('resend-verification-code', [RegisterController::class, 'resendVerificationCodeManually']);
 Route::post('verify-email', [VerificationController::class, 'verify']);
 
 // Маршруты для восстановления пароля
@@ -49,18 +49,18 @@ Route::group(['middleware' => 'auth:api'], function () {
 Route::get('/card/{id}', [PersonalBusinessCardController::class, 'show']);
 
 // Маршруты для создания визитки компании
-//Route::middleware('auth:api')->group(function () {
-//    Route::prefix('company-cards')->group(function () {
-//        Route::post('/', [CompanyBusinessCardController::class, 'store']);
-//        Route::put('/{id}', [CompanyBusinessCardController::class, 'update']);
-//        Route::get('/{id}', [CompanyBusinessCardController::class, 'show']);
-//        Route::delete('/{id}', [CompanyBusinessCardController::class, 'destroy']);
-//    });
-//
-//    Route::prefix('employee-cards')->group(function () {
-//        Route::post('/', [EmployeeBusinessCardController::class, 'store']);
-//        Route::put('/{id}', [EmployeeBusinessCardController::class, 'update']);
-//        Route::get('/{id}', [EmployeeBusinessCardController::class, 'show']);
-//        Route::delete('/{id}', [EmployeeBusinessCardController::class, 'destroy']);
-//    });
-//});
+Route::group(['middleware' => 'auth:api'], function () {
+    Route::prefix('company-cards')->group(function () {
+        Route::post('/', [CompanyBusinessCardController::class, 'store']);
+        Route::put('/{id}', [CompanyBusinessCardController::class, 'update']);
+        Route::get('/{id}', [CompanyBusinessCardController::class, 'show']);
+        Route::delete('/{id}', [CompanyBusinessCardController::class, 'destroy']);
+    });
+
+    Route::prefix('employee-cards')->group(function () {
+        Route::post('/', [EmployeeBusinessCardController::class, 'store']);
+        Route::put('/{id}', [EmployeeBusinessCardController::class, 'update']);
+        Route::get('/{id}', [EmployeeBusinessCardController::class, 'show']);
+        Route::delete('/{id}', [EmployeeBusinessCardController::class, 'destroy']);
+    });
+});
