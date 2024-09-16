@@ -52,22 +52,37 @@ class PersonalBusinessCardController extends Controller
 
     public function update(UpdateCardRequest $request, $id): JsonResponse
     {
-
-        // Поиск визитки по ID
         $card = PersonalBusinessCard::findOrFail($id);
 
-        // Проверка, является ли текущий пользователь владельцем визитки
         if ($card->user_id !== Auth::id()) {
+            Log::warning('Unauthorized update attempt', ['user_id' => Auth::id(), 'card_id' => $id]);
             return response()->json(['error' => 'Forbidden'], 403);
         }
 
         $data = $request->validated();
+        $data['remove_photo'] = $request->input('remove_photo');
+        $data['photo'] = $request->file('photo');
 
-        DB::transaction(function () use ($card, $data, $request) {
-            $this->businessCardService->updateCard($card, $data, $request);
-        });
-
-        return response()->json(['data' => ['status' => 'Card updated successfully']], 200);
+        try {
+            $this->businessCardService->updateCard($card, $data);
+            Log::info('Card updated successfully', ['card_id' => $id]);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Card updated successfully',
+                'data' => $this->businessCardService->formatCardResponse($card->fresh())
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Failed to update card', [
+                'card_id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to update card',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function destroy(string $id): JsonResponse
