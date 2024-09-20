@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CreateCardRequest;
 use App\Models\PersonalBusinessCard;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -21,10 +23,19 @@ class PersonalBusinessCardController extends Controller
      */
     public function store(CreateCardRequest $request): JsonResponse
     {
-        $data = $request->validated();
+        $data = $request->validate([
+            'fio' => 'required|string|max:255',
+            'about_me' => 'nullable|string',
+            'company_name' => 'nullable|string|max:255',
+            'job_position' => 'nullable|string|max:255',
+        ]);
+
         $data['user_id'] = Auth::id();
 
         $card = PersonalBusinessCard::create($data);
+
+        // Очистка кэша списка карточек пользователя
+        Cache::forget("user_cards_{$data['user_id']}");
 
         return response()->json(['data' => ['status' => 'Card created successfully', 'card' => $card]], 201);
     }
@@ -87,6 +98,10 @@ class PersonalBusinessCardController extends Controller
 
             $card->refresh();
 
+            // Очистка кэша
+            Cache::forget("card_{$id}");
+            Cache::forget("user_cards_{$card->user_id}");
+
             return response()->json([
                 'data' => [
                     'status' => 'Card updated successfully',
@@ -95,7 +110,7 @@ class PersonalBusinessCardController extends Controller
                 'image' => $data['photo'] ?? null
             ], 200);
         } catch (\Exception $e) {
-            Log::error('Card update failed', ['error' => $e->getMessage()]);
+//            Log::error('Card update failed', ['error' => $e->getMessage()]);
             return response()->json(['error' => 'Card update failed: ' . $e->getMessage()], 500);
         }
     }
@@ -129,8 +144,14 @@ class PersonalBusinessCardController extends Controller
      */
     public function show(string $id): JsonResponse
     {
-        $card = PersonalBusinessCard::with(['phones', 'emails', 'addresses', 'websites'])->findOrFail($id);
-        return response()->json(['data' => $this->formatCardResponse($card)]);
+        $cacheKey = "card_{$id}";
+
+        $formattedCard = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($id) {
+            $card = PersonalBusinessCard::with(['phones', 'emails', 'addresses', 'websites'])->findOrFail($id);
+            return $this->formatCardResponse($card);
+        });
+
+        return response()->json(['data' => $formattedCard]);
     }
 
     /**
@@ -140,12 +161,34 @@ class PersonalBusinessCardController extends Controller
      */
     public function index(): JsonResponse
     {
-        $cards = PersonalBusinessCard::with(['phones', 'emails', 'addresses', 'websites'])
-            ->where('user_id', Auth::id())
-            ->get()
-            ->map([$this, 'formatCardResponse']);
+        $userId = Auth::id();
+        $cacheKey = "user_cards_{$userId}";
 
-        return response()->json(['data' => $cards], 200);
+        $formattedCards = Cache::remember($cacheKey, now()->addMinutes(15), function () use ($userId) {
+            $cards = PersonalBusinessCard::with(['phones', 'emails', 'addresses', 'websites'])
+                ->where('user_id', $userId)
+                ->select('id', 'fio', 'company_name', 'job_position', 'photo', 'created_at', 'updated_at')
+                ->get();
+
+            return $cards->map(function ($card) {
+                $formattedCard = [
+                    'id' => $card->id,
+                    'fio' => $card->fio,
+                    'company_name' => $card->company_name,
+                    'job_position' => $card->job_position,
+                    'photo' => $card->photo ? url($card->photo) : null,
+                    'created_at' => $card->created_at,
+                    'updated_at' => $card->updated_at,
+                ];
+
+                $formattedCard['phones'] = $card->phones->pluck('number', 'type')->toArray();
+                $formattedCard['emails'] = $card->emails->pluck('email', 'type')->toArray();
+
+                return $formattedCard;
+            });
+        });
+
+        return response()->json(['data' => $formattedCards], 200);
     }
 
     /**
@@ -156,40 +199,50 @@ class PersonalBusinessCardController extends Controller
      */
     public function destroy(string $id): JsonResponse
     {
-        $card = PersonalBusinessCard::findOrFail($id);
+        try {
+            $card = PersonalBusinessCard::findOrFail($id);
 
-        if ($card->user_id !== Auth::id()) {
-            return response()->json(['error' => 'Unauthorized'], 403);
+            if ($card->user_id !== Auth::id()) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            DB::beginTransaction();
+
+            // Удаление фото, если оно есть
+            if ($card->photo) {
+                Storage::delete(str_replace('/storage/', 'public/', $card->photo));
+            }
+
+            // Удаление связанных данных
+            $card->phones()->delete();
+            $card->emails()->delete();
+            $card->addresses()->delete();
+            $card->websites()->delete();
+
+            // Удаление самой карточки
+            $card->delete();
+
+            DB::commit();
+
+            // Очистка кэша
+            Cache::forget("card_{$id}");
+            Cache::forget("user_cards_{$card->user_id}");
+
+            return response()->json(['data' => ['status' => 'Card deleted successfully']], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+//            Log::error('Failed to delete card', [
+//                'id' => $id,
+//                'error' => $e->getMessage(),
+//                'trace' => $e->getTraceAsString()
+//            ]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to delete card',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        $card->phones()->delete();
-        $card->emails()->delete();
-        $card->addresses()->delete();
-        $card->websites()->delete();
-        $card->delete();
-
-        return response()->json(['data' => ['status' => 'Card deleted successfully']], 200);
-    }
-
-    /**
-     * Validate card data.
-     *
-     * @param array $data
-     * @return array
-     */
-    private function validateCardData(array $data): array
-    {
-        return Validator::make($data, [
-            'photo' => 'nullable|string',
-            'fio' => 'required|string|max:255',
-            'about_me' => 'nullable|string',
-            'company_name' => 'nullable|string|max:255',
-            'job_position' => 'nullable|string|max:255',
-            'main_info.phone' => 'nullable|string|max:25',
-            'main_info.telegram' => 'nullable|string|max:255',
-            'main_info.whatsapp' => 'nullable|string|max:255',
-            'main_info.instagram' => 'nullable|string|max:255',
-        ])->validate();
     }
 
     /**
